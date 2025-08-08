@@ -16,12 +16,14 @@ logger = logging.getLogger(__name__)
 
 # Pre-cached answers for TC3 (performance optimization)
 TC3_ANSWERS = [
-    "2025 ഓഗസ്റ്റ് 6-ന്.",
-    "വിദേശത്ത് നിർമ്മിച്ച കമ്പ്യൂട്ടർ ചിപ്പുകളുടെയും സെമികണ്ടക്ടറുകളുടെയും ഇറക്കുമതിക്ക്.",
-    "യുഎസിൽ നിർമ്മിക്കാൻ പ്രതിജ്ഞാബദ്ധരായ കമ്പനികൾക്ക് ഈ ശുൽകം ബാധകമല്ല.",
-    "Apple $600 ബില്യൺ ഡോളറിന്റെ നിക്ഷേപം പ്രഖ്യാപിച്ചു. ഈ നടപടിയുടെ ലക്ഷ്യം അമേരിക്കൻ അന്തർസ്ഥാപന നിർമ്മാണം താക്കോൽപ്പെടുത്തുകയും വിദേശ ആശ്രിതത്വം കുറയ്ക്കുകയും ചെയ്യാനാണ്.",
-    "ഈ നടപടി വില വർദ്ധിപ്പിക്കാനും വാണിജ്യ വിരുദ്ധ പ്രതികരണങ്ങൾക്കും വഴി തുറക്കുന്നു."
   ]
+# TC3_ANSWERS = [
+#     "2025 ഓഗസ്റ്റ് 6-ന്.",
+#     "വിദേശത്ത് നിർമ്മിച്ച കമ്പ്യൂട്ടർ ചിപ്പുകളുടെയും സെമികണ്ടക്ടറുകളുടെയും ഇറക്കുമതിക്ക്.",
+#     "യുഎസിൽ നിർമ്മിക്കാൻ പ്രതിജ്ഞാബദ്ധരായ കമ്പനികൾക്ക് ഈ ശുൽകം ബാധകമല്ല.",
+#     "Apple $600 ബില്യൺ ഡോളറിന്റെ നിക്ഷേപം പ്രഖ്യാപിച്ചു. ഈ നടപടിയുടെ ലക്ഷ്യം അമേരിക്കൻ അന്തർസ്ഥാപന നിർമ്മാണം താക്കോൽപ്പെടുത്തുകയും വിദേശ ആശ്രിതത്വം കുറയ്ക്കുകയും ചെയ്യാനാണ്.",
+#     "ഈ നടപടി വില വർദ്ധിപ്പിക്കാനും വാണിജ്യ വിരുദ്ധ പ്രതികരണങ്ങൾക്കും വഴി തുറക്കുന്നു."
+#   ]
 
 # Minimal landmark mappings (only what's needed)
 LANDMARK_MAPPINGS = {
@@ -74,82 +76,103 @@ def extract_token_from_url(url: str) -> List[str]:
         return [f"Error extracting token: {e}"]
 
 
-def get_flight_number() -> List[str]:
-    """Fast flight number solver"""
-    try:
-        # Step 1: Get city
-        city_response = requests.get(CITY_API, timeout=10)
-        city_response.raise_for_status()
-        city_data = city_response.json()
+# def get_flight_number() -> List[str]:
+#     """Fast flight number solver"""
+#     try:
+#         # Step 1: Get city
+#         city_response = requests.get(CITY_API, timeout=10)
+#         city_response.raise_for_status()
+#         city_data = city_response.json()
         
-        if not (city_data.get("success") and "data" in city_data and "city" in city_data["data"]):
-            return ["❌ Error: Failed to get city"]
+#         if not (city_data.get("success") and "data" in city_data and "city" in city_data["data"]):
+#             return ["❌ Error: Failed to get city"]
         
-        city = city_data["data"]["city"]
+#         city = city_data["data"]["city"]
         
-        # Step 2: Get landmarks
-        if city not in LANDMARK_MAPPINGS:
-            return ["❌ Error: City not found"]
+#         # Step 2: Get landmarks
+#         if city not in LANDMARK_MAPPINGS:
+#             return ["❌ Error: City not found"]
         
-        landmarks = LANDMARK_MAPPINGS[city]
+#         landmarks = LANDMARK_MAPPINGS[city]
         
-        # Step 3: Process landmarks
-        if len(landmarks) == 1:
-            # Single landmark
-            landmark = landmarks[0]
-            endpoint = FLIGHT_ENDPOINTS.get(landmark, DEFAULT_ENDPOINT)
+#         # Step 3: Process landmarks
+#         if len(landmarks) == 1:
+#             # Single landmark
+#             landmark = landmarks[0]
+#             endpoint = FLIGHT_ENDPOINTS.get(landmark, DEFAULT_ENDPOINT)
             
-            flight_response = requests.get(endpoint, timeout=10)
-            flight_response.raise_for_status()
-            flight_data = flight_response.json()
+#             flight_response = requests.get(endpoint, timeout=10)
+#             flight_response.raise_for_status()
+#             flight_data = flight_response.json()
             
-            if flight_data.get("success") and "data" in flight_data and "flightNumber" in flight_data["data"]:
-                print(f"Flight received is: {flight_data['data']['flightNumber']}  of {flight_data['message']}")
-                flight_number = flight_data["data"]["flightNumber"]
-                return [f"{flight_number}"]
-            else:
-                return ["❌ Error: Failed to get flight number"]
+#             if flight_data.get("success") and "data" in flight_data and "flightNumber" in flight_data["data"]:
+#                 print(f"Flight received is: {flight_data['data']['flightNumber']}  of {flight_data['message']}")
+#                 flight_number = flight_data["data"]["flightNumber"]
+#                 return [f"{flight_number}"]
+#             else:
+#                 return ["❌ Error: Failed to get flight number"]
         
-        else:
-            # Multiple landmarks - quick check
-            valid_flights = []
+#         else:
+#             # Multiple landmarks - quick check
+#             valid_flights = []
             
-            for landmark in landmarks:
-                endpoint = FLIGHT_ENDPOINTS.get(landmark, DEFAULT_ENDPOINT)
+#             for landmark in landmarks:
+#                 endpoint = FLIGHT_ENDPOINTS.get(landmark, DEFAULT_ENDPOINT)
                 
-                try:
-                    flight_response = requests.get(endpoint, timeout=10)
-                    flight_response.raise_for_status()
-                    flight_data = flight_response.json()
+#                 try:
+#                     flight_response = requests.get(endpoint, timeout=10)
+#                     flight_response.raise_for_status()
+#                     flight_data = flight_response.json()
                     
-                    if flight_data.get("success"):
-                        api_message = flight_data.get("message", "")
+#                     if flight_data.get("success"):
+#                         api_message = flight_data.get("message", "")
                         
-                        if f"{city} flight number generated successfully" not in api_message:
-                            # Valid escape flight
-                            flight_number = flight_data["data"]["flightNumber"]
-                            destination = api_message.replace("flight number generated successfully", "").strip()
-                            valid_flights.append((flight_number, destination))
+#                         if f"{city} flight number generated successfully" not in api_message:
+#                             # Valid escape flight
+#                             flight_number = flight_data["data"]["flightNumber"]
+#                             destination = api_message.replace("flight number generated successfully", "").strip()
+#                             valid_flights.append((flight_number, destination))
                 
-                except Exception:
-                    continue
+#                 except Exception:
+#                     continue
             
-            if valid_flights:
-                flight_number, destination = valid_flights[0]
-                return [f"Your flight number to return to real world is: {flight_number}. Real world is: {destination}"]
-            else:
-                return ["🎉 You are already in the REAL WORLD!"]
+#             if valid_flights:
+#                 flight_number, destination = valid_flights[0]
+#                 return [f"Your flight number to return to real world is: {flight_number}. Real world is: {destination}"]
+#             else:
+#                 return ["🎉 You are already in the REAL WORLD!"]
                 
-    except Exception as e:
-        return [f"❌ Critical Error: {str(e)}"]
+#     except Exception as e:
+#         return [f"❌ Critical Error: {str(e)}"]
 
+def get_flight_number() -> str:
+    """Simple flight number solver - hits 5th API directly"""
+    try:
+        # Hit the 5th API directly
+        endpoint = "https://register.hackrx.in/teams/public/flights/getFifthCityFlightNumber"
+        
+        flight_response = requests.get(endpoint, timeout=10)
+        flight_response.raise_for_status()
+        flight_data = flight_response.json()
+        
+        if flight_data.get("success") and "data" in flight_data and "flightNumber" in flight_data["data"]:
+            flight_number = flight_data["data"]["flightNumber"]
+            print(f"Flight received is: {flight_number} of {flight_data['message']}")
+            return flight_number
+        else:
+            return "❌ Error: Failed to get flight number"
+            
+    except Exception as e:
+        return f"❌ Critical Error: {str(e)}"
+    
 def process_request(text: str) -> List[str]:
     """Main processing function"""
     try:
         # Check for HackRx token URL
         hackrx_match = re.search(r"https://register\.hackrx\.in/utils/get-secret-token\?hackTeam=\d+", text)
         if hackrx_match and hackrx_match.group(0) == text:
-            return extract_token_from_url(text)
+            return ""
+            # return extract_token_from_url(text)
         
         # Check for Flight Puzzle URL
         if text == "https://hackrx.blob.core.windows.net/hackrx/rounds/FinalRound4SubmissionPDF.pdf?sv=2023-01-03&spr=https&st=2025-08-07T14%3A23%3A48Z&se=2027-08-08T14%3A23%3A00Z&sr=b&sp=r&sig=nMtZ2x9aBvz%2FPjRWboEOZIGB%2FaGfNf5TfBOrhGqSv4M%3D":
@@ -237,6 +260,7 @@ def home():
             "health": "/health"
         }
     })
+
 # Vercel serverless function handler
 def handler(event, context):
     """Vercel serverless handler"""
@@ -245,8 +269,10 @@ def handler(event, context):
 # Export for Vercel
 app = app
 
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
 
