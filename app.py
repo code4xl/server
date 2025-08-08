@@ -11,8 +11,6 @@ import traceback
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-
 # Pre-cached answers for TC3 (performance optimization)
 TC3_ANSWERS = [
     "2025 ഓഗസ്റ്റ് 6-ന്.",
@@ -44,7 +42,7 @@ LANDMARK_MAPPINGS = {
     "Los Angeles": ["Buckingham Palace"]
 }
 
-FLIGHT_ENDPOINTS = {
+FLIGHT_ENDPOINTS ={
     "Gateway of India": "https://register.hackrx.in/teams/public/flights/getFirstCityFlightNumber",
     "Taj Mahal": "https://register.hackrx.in/teams/public/flights/getSecondCityFlightNumber",
     "Eiffel Tower": "https://register.hackrx.in/teams/public/flights/getThirdCityFlightNumber",
@@ -119,7 +117,7 @@ def get_flight_number() -> List[str]:
                     if flight_data.get("success"):
                         api_message = flight_data.get("message", "")
                         
-                        if f"{city} flight number generated successfully" in api_message:
+                        if f"{city} flight number generated successfully" not in api_message:
                             # Valid escape flight
                             flight_number = flight_data["data"]["flightNumber"]
                             destination = api_message.replace("flight number generated successfully", "").strip()
@@ -157,6 +155,9 @@ def process_request(text: str) -> List[str]:
         
     except Exception as e:
         return [f"Error: {str(e)}"]
+
+# Initialize Flask app
+app = Flask(__name__)
 
 @app.route('/api/v1/hackrx/run', methods=['POST'])
 def hackrx_run():
@@ -211,16 +212,10 @@ def home():
         }
     })
 
-if __name__ == '__main__':
-    # Production configuration
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+# Vercel serverless function handler
+def handler(event, context):
+    """Vercel serverless handler"""
+    return app
 
-# For deployment (Gunicorn/uWSGI)
-
-# gunicorn -w 4 -b 0.0.0.0:5000 app:app
-# For Vercel deployment
-def handler(request):
-    return app(request.environ, lambda status, headers: None)
-
-# This is required for Vercel
+# Export for Vercel
 app = app
