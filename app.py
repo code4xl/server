@@ -55,20 +55,23 @@ DEFAULT_ENDPOINT = "https://register.hackrx.in/teams/public/flights/getFifthCity
 CITY_API = "https://register.hackrx.in/submissions/myFavouriteCity"
 
 def extract_token_from_url(url: str) -> List[str]:
-    """Extract token from HackRx URL - optimized for speed"""
+    token_pattern = re.compile(rb'<div id="token">(.*?)</div>')
+    
     try:
-        # smaller timeout for faster failure in case of bad network
-        response = requests.get(url, timeout=2)
-        response.raise_for_status()
+        with httpx.Client(http2=True, timeout=2) as client:
+            response = client.get(url)
+            response.raise_for_status()
+            html_bytes = response.content
 
-        # If the response is plain text (fastest)
-        token = response.text.strip()
-        if token:
-            return [f"Secret token from the link is : {token}"]
+        match = token_pattern.search(html_bytes)
+        if match:
+            token = match.group(1).decode().strip()
+            return [f"{token}"]
+        else:
+            return ["Token not found in the document."]
+    except Exception as e:
+        return [f"Error extracting token: {e}"]
 
-        return ["Token not found in the document."]
-    except Exception:
-        return ["Error extracting token"]
 
 def get_flight_number() -> List[str]:
     """Fast flight number solver"""
@@ -236,4 +239,5 @@ app = app
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
