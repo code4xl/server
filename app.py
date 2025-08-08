@@ -9,18 +9,6 @@ import traceback
 import httpx
 import time
 
-
-from flask import Flask, request, jsonify
-import requests
-import re
-import logging
-from typing import List #, Dict, Any
-# from bs4 import BeautifulSoup
-import json
-import traceback
-import httpx
-import time
-
 from flask_cors import CORS
 
 # Configure minimal logging for production
@@ -88,7 +76,7 @@ def extract_token_from_url(url: str) -> List[str]:
 
 
 def get_flight_number():
-   
+#    start_time = time.time()
     
     try:
         # Step 1: Get favorite city from API
@@ -172,19 +160,17 @@ def get_flight_number():
         # print("flight no: ", flight_number)
         
         
-        return {
-            "answers": [str(flight_number)],
-        }
+        return [str(flight_number)]
         
     except requests.exceptions.RequestException as e:
         return {
             "error": f"API request failed: {str(e)}",
-            "time_taken": f"{time.time() - start_time:.3f} seconds"
+            # "time_taken": f"{time.time() - start_time:.3f} seconds"
         }
     except KeyError as e:
         return {
             "error": f"Missing expected data in API response: {str(e)}",
-            "time_taken": f"{time.time() - start_time:.3f} seconds"
+            # "time_taken": f"{time.time() - start_time:.3f} seconds"
         }
 
 
@@ -313,3 +299,4 @@ app = app
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
