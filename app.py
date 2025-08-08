@@ -6,6 +6,7 @@ from typing import List #, Dict, Any
 # from bs4 import BeautifulSoup
 import json
 import traceback
+import httpx
 
 from flask_cors import CORS
 
@@ -239,5 +240,6 @@ app = app
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
