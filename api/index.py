@@ -1,0 +1,3 @@
+/api/index.py
+/requirements.txt
+/vercel.json
