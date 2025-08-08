@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
 import requests
-from bs4 import BeautifulSoup
-import json
 import re
 import logging
-from typing import List, Dict, Any
+from typing import List #, Dict, Any
+# from bs4 import BeautifulSoup
+import json
 import traceback
+
+from flask_cors import CORS
 
 # Configure minimal logging for production
 logging.basicConfig(level=logging.WARNING)
@@ -53,17 +55,18 @@ DEFAULT_ENDPOINT = "https://register.hackrx.in/teams/public/flights/getFifthCity
 CITY_API = "https://register.hackrx.in/submissions/myFavouriteCity"
 
 def extract_token_from_url(url: str) -> List[str]:
-    """Extract token from HackRx URL"""
+    """Extract token from HackRx URL - optimized for speed"""
     try:
-        response = requests.get(url, timeout=5)
+        # smaller timeout for faster failure in case of bad network
+        response = requests.get(url, timeout=2)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        token_div = soup.find('div', id='token')
-        
-        if token_div:
-            return [f"Secret token from the link is : {token_div.text.strip()}"]
-        else:
-            return ["Token not found in the document."]
+
+        # If the response is plain text (fastest)
+        token = response.text.strip()
+        if token:
+            return [f"Secret token from the link is : {token}"]
+
+        return ["Token not found in the document."]
     except Exception:
         return ["Error extracting token"]
 
@@ -159,6 +162,17 @@ def process_request(text: str) -> List[str]:
 # Initialize Flask app
 app = Flask(__name__)
 
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": "*",
+        "allow_headers": "*",
+        "expose_headers": "*",
+        "supports_credentials": True
+    }
+})
+
+
 @app.route('/api/v1/hackrx/run', methods=['POST'])
 def hackrx_run():
     """Main API endpoint"""
@@ -222,3 +236,4 @@ app = app
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
