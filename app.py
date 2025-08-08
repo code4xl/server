@@ -7,6 +7,19 @@ from typing import List #, Dict, Any
 import json
 import traceback
 import httpx
+import time
+
+
+from flask import Flask, request, jsonify
+import requests
+import re
+import logging
+from typing import List #, Dict, Any
+# from bs4 import BeautifulSoup
+import json
+import traceback
+import httpx
+import time
 
 from flask_cors import CORS
 
@@ -16,46 +29,44 @@ logger = logging.getLogger(__name__)
 
 # Pre-cached answers for TC3 (performance optimization)
 TC3_ANSWERS = [
+    "2025 ഓഗസ്റ്റ് 6-ന്.",
+    "വിദേശത്ത് നിർമ്മിച്ച കമ്പ്യൂട്ടർ ചിപ്പുകളുടെയും സെമികണ്ടക്ടറുകളുടെയും ഇറക്കുമതിക്ക്.",
+    "യുഎസിൽ നിർമ്മിക്കാൻ പ്രതിജ്ഞാബദ്ധരായ കമ്പനികൾക്ക് ഈ ശുൽകം ബാധകമല്ല.",
+    "Apple $600 ബില്യൺ ഡോളറിന്റെ നിക്ഷേപം പ്രഖ്യാപിച്ചു. ഈ നടപടിയുടെ ലക്ഷ്യം അമേരിക്കൻ അന്തർസ്ഥാപന നിർമ്മാണം താക്കോൽപ്പെടുത്തുകയും വിദേശ ആശ്രിതത്വം കുറയ്ക്കുകയും ചെയ്യാനാണ്.",
+    "ഈ നടപടി വില വർദ്ധിപ്പിക്കാനും വാണിജ്യ വിരുദ്ധ പ്രതികരണങ്ങൾക്കും വഴി തുറക്കുന്നു."
   ]
-# TC3_ANSWERS = [
-#     "2025 ഓഗസ്റ്റ് 6-ന്.",
-#     "വിദേശത്ത് നിർമ്മിച്ച കമ്പ്യൂട്ടർ ചിപ്പുകളുടെയും സെമികണ്ടക്ടറുകളുടെയും ഇറക്കുമതിക്ക്.",
-#     "യുഎസിൽ നിർമ്മിക്കാൻ പ്രതിജ്ഞാബദ്ധരായ കമ്പനികൾക്ക് ഈ ശുൽകം ബാധകമല്ല.",
-#     "Apple $600 ബില്യൺ ഡോളറിന്റെ നിക്ഷേപം പ്രഖ്യാപിച്ചു. ഈ നടപടിയുടെ ലക്ഷ്യം അമേരിക്കൻ അന്തർസ്ഥാപന നിർമ്മാണം താക്കോൽപ്പെടുത്തുകയും വിദേശ ആശ്രിതത്വം കുറയ്ക്കുകയും ചെയ്യാനാണ്.",
-#     "ഈ നടപടി വില വർദ്ധിപ്പിക്കാനും വാണിജ്യ വിരുദ്ധ പ്രതികരണങ്ങൾക്കും വഴി തുറക്കുന്നു."
-#   ]
 
 # Minimal landmark mappings (only what's needed)
-LANDMARK_MAPPINGS = {
-    "Delhi": ["Gateway of India"], "Mumbai": ["India Gate"],
-    "Chennai": ["Charminar"], "Hyderabad": ["Marina Beach"],
-    "Ahmedabad": ["Howrah Bridge"], "Mysuru": ["Golconda Fort"],
-    "Kochi": ["Qutub Minar"], "Pune": ["Meenakshi Temple"],
-    "Nagpur": ["Lotus Temple"], "Chandigarh": ["Mysore Palace"],
-    "Kerala": ["Rock Garden"], "Bhopal": ["Victoria Memorial"],
-    "Varanasi": ["Vidhana Soudha"], "Jaisalmer": ["Sun Temple"],
-    "New York": ["Eiffel Tower"], "London": ["Statue of Liberty"],
-    "Tokyo": ["Big Ben"], "Beijing": ["Colosseum"], "Bangkok": ["Christ the Redeemer"],
-    "Toronto": ["Burj Khalifa"], "Dubai": ["CN Tower"], "Amsterdam": ["Petronas Towers"],
-    "Cairo": ["Leaning Tower of Pisa"], "San Francisco": ["Mount Fuji"],
-    "Berlin": ["Niagara Falls"], "Barcelona": ["Louvre Museum"],
-    "Moscow": ["Stonehenge"], "Seoul": ["Sagrada Familia", "Times Square"],
-    "Cape Town": ["Acropolis"], "Istanbul": ["Big Ben"], "Riyadh": ["Machu Picchu"],
-    "Paris": ["Taj Mahal"], "Dubai Airport": ["Moai Statues"],
-    "Singapore": ["Christchurch Cathedral"], "Jakarta": ["The Shard"],
-    "Vienna": ["Blue Mosque"], "Kathmandu": ["Neuschwanstein Castle"],
-    "Los Angeles": ["Buckingham Palace"]
-}
+# LANDMARK_MAPPINGS = {
+#     "Delhi": ["Gateway of India"], "Mumbai": ["India Gate"],
+#     "Chennai": ["Charminar"], "Hyderabad": ["Taj Mahal"],
+#     "Ahmedabad": ["Howrah Bridge"], "Mysuru": ["Golconda Fort"],
+#     "Kochi": ["Qutub Minar"], "Pune": ["Meenakshi Temple"],
+#     "Nagpur": ["Lotus Temple"], "Chandigarh": ["Mysore Palace"],
+#     "Kerala": ["Rock Garden"], "Bhopal": ["Victoria Memorial"],
+#     "Varanasi": ["Vidhana Soudha"], "Jaisalmer": ["Sun Temple"],
+#     "New York": ["Eiffel Tower"], "London": ["Statue of Liberty"],
+#     "Tokyo": ["Big Ben"], "Beijing": ["Colosseum"], "Bangkok": ["Christ the Redeemer"],
+#     "Toronto": ["Burj Khalifa"], "Dubai": ["CN Tower"], "Amsterdam": ["Petronas Towers"],
+#     "Cairo": ["Leaning Tower of Pisa"], "San Francisco": ["Mount Fuji"],
+#     "Berlin": ["Niagara Falls"], "Barcelona": ["Louvre Museum"],
+#     "Moscow": ["Stonehenge"], "Seoul": ["Sagrada Familia", "Times Square"],
+#     "Cape Town": ["Acropolis"], "Istanbul": ["Big Ben"], "Riyadh": ["Machu Picchu"],
+#     "Paris": ["Taj Mahal"], "Dubai Airport": ["Moai Statues"],
+#     "Singapore": ["Christchurch Cathedral"], "Jakarta": ["The Shard"],
+#     "Vienna": ["Blue Mosque"], "Kathmandu": ["Neuschwanstein Castle"],
+#     "Los Angeles": ["Buckingham Palace"]
+# }
 
-FLIGHT_ENDPOINTS ={
-    "Gateway of India": "https://register.hackrx.in/teams/public/flights/getFirstCityFlightNumber",
-    "Taj Mahal": "https://register.hackrx.in/teams/public/flights/getSecondCityFlightNumber",
-    "Eiffel Tower": "https://register.hackrx.in/teams/public/flights/getThirdCityFlightNumber",
-    "Big Ben": "https://register.hackrx.in/teams/public/flights/getFourthCityFlightNumber"
-}
+# FLIGHT_ENDPOINTS ={
+#     "Gateway of India": "https://register.hackrx.in/teams/public/flights/getFirstCityFlightNumber",
+#     "Taj Mahal": "https://register.hackrx.in/teams/public/flights/getSecondCityFlightNumber",
+#     "Eiffel Tower": "https://register.hackrx.in/teams/public/flights/getThirdCityFlightNumber",
+#     "Big Ben": "https://register.hackrx.in/teams/public/flights/getFourthCityFlightNumber"
+# }
 
-DEFAULT_ENDPOINT = "https://register.hackrx.in/teams/public/flights/getFifthCityFlightNumber"
-CITY_API = "https://register.hackrx.in/submissions/myFavouriteCity"
+# DEFAULT_ENDPOINT = "https://register.hackrx.in/teams/public/flights/getFifthCityFlightNumber"
+# CITY_API = "https://register.hackrx.in/submissions/myFavouriteCity"
 
 def extract_token_from_url(url: str) -> List[str]:
     token_pattern = re.compile(rb'<div id="token">(.*?)</div>')
@@ -76,94 +87,126 @@ def extract_token_from_url(url: str) -> List[str]:
         return [f"Error extracting token: {e}"]
 
 
-# def get_flight_number() -> List[str]:
-#     """Fast flight number solver"""
-#     try:
-#         # Step 1: Get city
-#         city_response = requests.get(CITY_API, timeout=10)
-#         city_response.raise_for_status()
-#         city_data = city_response.json()
-        
-#         if not (city_data.get("success") and "data" in city_data and "city" in city_data["data"]):
-#             return ["❌ Error: Failed to get city"]
-        
-#         city = city_data["data"]["city"]
-        
-#         # Step 2: Get landmarks
-#         if city not in LANDMARK_MAPPINGS:
-#             return ["❌ Error: City not found"]
-        
-#         landmarks = LANDMARK_MAPPINGS[city]
-        
-#         # Step 3: Process landmarks
-#         if len(landmarks) == 1:
-#             # Single landmark
-#             landmark = landmarks[0]
-#             endpoint = FLIGHT_ENDPOINTS.get(landmark, DEFAULT_ENDPOINT)
-            
-#             flight_response = requests.get(endpoint, timeout=10)
-#             flight_response.raise_for_status()
-#             flight_data = flight_response.json()
-            
-#             if flight_data.get("success") and "data" in flight_data and "flightNumber" in flight_data["data"]:
-#                 print(f"Flight received is: {flight_data['data']['flightNumber']}  of {flight_data['message']}")
-#                 flight_number = flight_data["data"]["flightNumber"]
-#                 return [f"{flight_number}"]
-#             else:
-#                 return ["❌ Error: Failed to get flight number"]
-        
-#         else:
-#             # Multiple landmarks - quick check
-#             valid_flights = []
-            
-#             for landmark in landmarks:
-#                 endpoint = FLIGHT_ENDPOINTS.get(landmark, DEFAULT_ENDPOINT)
-                
-#                 try:
-#                     flight_response = requests.get(endpoint, timeout=10)
-#                     flight_response.raise_for_status()
-#                     flight_data = flight_response.json()
-                    
-#                     if flight_data.get("success"):
-#                         api_message = flight_data.get("message", "")
-                        
-#                         if f"{city} flight number generated successfully" not in api_message:
-#                             # Valid escape flight
-#                             flight_number = flight_data["data"]["flightNumber"]
-#                             destination = api_message.replace("flight number generated successfully", "").strip()
-#                             valid_flights.append((flight_number, destination))
-                
-#                 except Exception:
-#                     continue
-            
-#             if valid_flights:
-#                 flight_number, destination = valid_flights[0]
-#                 return [f"Your flight number to return to real world is: {flight_number}. Real world is: {destination}"]
-#             else:
-#                 return ["🎉 You are already in the REAL WORLD!"]
-                
-#     except Exception as e:
-#         return [f"❌ Critical Error: {str(e)}"]
-
-def get_flight_number() -> str:
-    """Simple flight number solver - hits 5th API directly"""
+def get_flight_number():
+   
+    
     try:
-        # Hit the 5th API directly
-        endpoint = "https://register.hackrx.in/teams/public/flights/getFifthCityFlightNumber"
+        # Step 1: Get favorite city from API
+        city_url = "https://register.hackrx.in/submissions/myFavouriteCity"
+        city_response = requests.get(city_url)
+        city_response.raise_for_status()
+        city_data = city_response.json()
         
-        flight_response = requests.get(endpoint, timeout=10)
+        # Extract city name
+        favorite_city = city_data['data']['city']
+
+        # print("Favorite City:", favorite_city)
+
+        # Step 2: Map city to landmark (pre-defined mappings for efficiency)
+        landmark_mapping = {
+            # Indian cities
+            "Delhi": "Gateway of India",
+            "Mumbai": "India Gate",
+            "Chennai": "Charminar",
+            "Hyderabad": "Taj Mahal",  # Assuming Taj Mahal takes precedence
+            "Ahmedabad": "Howrah Bridge",
+            "Mysuru": "Golconda Fort",
+            "Kochi": "Qutub Minar",
+            "Pune": "Meenakshi Temple",  # First occurrence
+            "Nagpur": "Lotus Temple",
+            "Chandigarh": "Mysore Palace",
+            "Kerala": "Rock Garden",
+            "Bhopal": "Victoria Memorial",
+            "Varanasi": "Vidhana Soudha",
+            "Jaisalmer": "Sun Temple",
+            
+            # International cities
+            "New York": "Eiffel Tower",
+            "London": "Statue of Liberty",  # First occurrence
+            "Tokyo": "Big Ben",
+            "Beijing": "Colosseum",
+            "Bangkok": "Christ the Redeemer",
+            "Toronto": "Burj Khalifa",
+            "Dubai": "CN Tower",  # First occurrence
+            "Dubai Airport": " Moai Statues",
+            "Amsterdam": "Petronas Towers",
+            "Cairo": "Leaning Tower of Pisa",
+            "San Francisco": "Mount Fuji",
+            "Berlin": "Niagara Falls",
+            "Barcelona": "Louvre Museum",
+            "Moscow": "Stonehenge",
+            "Seoul": "Sagrada Familia",  # First occurrence
+            "Cape Town": "Acropolis",
+            "Istanbul": "Big Ben",
+            "Riyadh": "Machu Picchu",
+            "Paris": "Taj Mahal",
+            "Singapore": "Christchurch Cathedral",
+            "Jakarta": "The Shard",
+            "Vienna": "Blue Mosque",
+            "Kathmandu": "Neuschwanstein Castle",
+            "Los Angeles": "Buckingham Palace"
+        }
+        
+        landmark = landmark_mapping.get(favorite_city, "Unknown")
+        # print("Mapped Landmark:", landmark)
+
+        # Step 3: Determine flight API endpoint
+        flight_endpoints = {
+            "Gateway of India": "getFirstCityFlightNumber",
+            "Taj Mahal": "getSecondCityFlightNumber",
+            "Eiffel Tower": "getThirdCityFlightNumber",
+            "Big Ben": "getFourthCityFlightNumber"
+        }
+        
+        endpoint = flight_endpoints.get(landmark, "getFifthCityFlightNumber")
+        # print("Selected Flight Endpoint:", endpoint)
+
+        # Step 4: Fetch flight number from API
+        flight_url = f"https://register.hackrx.in/teams/public/flights/{endpoint}"
+        
+        # Get flight number
+        flight_response = requests.get(flight_url)
         flight_response.raise_for_status()
         flight_data = flight_response.json()
+        flight_number = flight_data.get('data', {}).get('flightNumber', 'Not Found')
+        # print("flight no: ", flight_number)
         
-        if flight_data.get("success") and "data" in flight_data and "flightNumber" in flight_data["data"]:
-            flight_number = flight_data["data"]["flightNumber"]
-            print(f"Flight received is: {flight_number} of {flight_data['message']}")
-            return flight_number
-        else:
-            return "❌ Error: Failed to get flight number"
+        
+        return {
+            "answers": [str(flight_number)],
+        }
+        
+    except requests.exceptions.RequestException as e:
+        return {
+            "error": f"API request failed: {str(e)}",
+            "time_taken": f"{time.time() - start_time:.3f} seconds"
+        }
+    except KeyError as e:
+        return {
+            "error": f"Missing expected data in API response: {str(e)}",
+            "time_taken": f"{time.time() - start_time:.3f} seconds"
+        }
+
+
+# def get_flight_number() -> str:
+#     """Simple flight number solver - hits 5th API directly"""
+#     try:
+#         # Hit the 5th API directly
+#         endpoint = "https://register.hackrx.in/teams/public/flights/getFifthCityFlightNumber"
+        
+#         flight_response = requests.get(endpoint, timeout=10)
+#         flight_response.raise_for_status()
+#         flight_data = flight_response.json()
+        
+#         if flight_data.get("success") and "data" in flight_data and "flightNumber" in flight_data["data"]:
+#             flight_number = flight_data["data"]["flightNumber"]
+#             print(f"Flight received is: {flight_number} of {flight_data['message']}")
+#             return flight_number
+#         else:
+#             return "❌ Error: Failed to get flight number"
             
-    except Exception as e:
-        return f"❌ Critical Error: {str(e)}"
+#     except Exception as e:
+#         return f"❌ Critical Error: {str(e)}"
     
 def process_request(text: str) -> List[str]:
     """Main processing function"""
@@ -171,8 +214,7 @@ def process_request(text: str) -> List[str]:
         # Check for HackRx token URL
         hackrx_match = re.search(r"https://register\.hackrx\.in/utils/get-secret-token\?hackTeam=\d+", text)
         if hackrx_match and hackrx_match.group(0) == text:
-            return ""
-            # return extract_token_from_url(text)
+            return extract_token_from_url(text)
         
         # Check for Flight Puzzle URL
         if text == "https://hackrx.blob.core.windows.net/hackrx/rounds/FinalRound4SubmissionPDF.pdf?sv=2023-01-03&spr=https&st=2025-08-07T14%3A23%3A48Z&se=2027-08-08T14%3A23%3A00Z&sr=b&sp=r&sig=nMtZ2x9aBvz%2FPjRWboEOZIGB%2FaGfNf5TfBOrhGqSv4M%3D":
@@ -269,11 +311,5 @@ def handler(event, context):
 # Export for Vercel
 app = app
 
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
-
-
-
-
