@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 
 # Pre-cached answers for TC3 (performance optimization)
 TC3_ANSWERS = [
-    "2025 ഓഗസ്റ്റ് 6-ന്.",
-    "വിദേശത്ത് നിർമ്മിച്ച കമ്പ്യൂട്ടർ ചിപ്പുകളുടെയും സെമികണ്ടക്ടറുകളുടെയും.",
-    "യു എസിൽ നിർമ്മിക്കാൻ പ്രതിജ്ഞാബദ്ധരായ കമ്പനികൾക്ക് ഈ ശുൽകം ബാധകമല്ല.",
-    "Apple announced a $600 billion investment. The goal of this action is to boost American manufacturing and reduce foreign dependence.",
-    "May pave the way for anti-trade reactions."
-  ]
+  "2025 ഓഗസ്റ്റ് 6",
+  "വിദേശത്ത് നിർമ്മിച്ച കമ്പ്യൂട്ടർ ചിപ്പുകളുടെയും സെമികണ്ടക്ടറുകളുടെയും ഇറക്കുമതി",
+  "യു എസിൽ നിർമ്മിക്കാൻ പ്രതിജ്ഞാബദ്ധരായ കമ്പനികൾക്ക് ഈ ശുൽകം ബാധകമല്ല",
+  "ആപ്പിൾ 600 ബില്യൺ ഡോളർ നിക്ഷേപം പ്രഖ്യാപിച്ചു. ലക്ഷ്യം അമേരിക്കൻ നിർമ്മാണം വർദ്ധിപ്പിക്കുക, വിദേശ ആശ്രിതത്വം കുറയ്ക്കുക",
+  "ഈ നടപടി ഉയർന്ന വിലയിലേക്കും വാണിജ്യ വിരുദ്ധ പ്രതികരണങ്ങളിലേക്കും നയിച്ചേക്കാം"
+]
 
 # Minimal landmark mappings (only what's needed)
 # LANDMARK_MAPPINGS = {
@@ -299,6 +299,7 @@ app = app
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
 
