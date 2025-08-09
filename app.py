@@ -20,8 +20,8 @@ TC3_ANSWERS = [
     "2025 ഓഗസ്റ്റ് 6-ന്.",
     "വിദേശത്ത് നിർമ്മിച്ച കമ്പ്യൂട്ടർ ചിപ്പുകളുടെയും സെമികണ്ടക്ടറുകളുടെയും.",
     "യു എസിൽ നിർമ്മിക്കാൻ പ്രതിജ്ഞാബദ്ധരായ കമ്പനികൾക്ക് ഈ ശുൽകം ബാധകമല്ല.",
-    "ആപ്പിൾ $600 ബില്യൺ ഡോളറിന്റെ നിക്ഷേപം പ്രഖ്യാപിച്ചു. ഈ നടപടിയുടെ ലക്ഷ്യം അമേരിക്കൻ അന്തർസ്ഥാപന നിർമ്മാണം താക്കോൽപ്പെടുത്തുകയും വിദേശ ആശ്രിതത്വം കുറയ്ക്കുകയും ചെയ്യാനാണ്.",
-    "ഈ നടപടി വില വർദ്ധിപ്പിക്കാനും വാണിജ്യ വിരുദ്ധ പ്രതികരണങ്ങൾക്കും വഴി തുറക്കുന്നു."
+    "Apple announced a $600 billion investment. The goal of this action is to boost American manufacturing and reduce foreign dependence.",
+    "May pave the way for anti-trade reactions."
   ]
 
 # Minimal landmark mappings (only what's needed)
@@ -299,5 +299,6 @@ app = app
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
